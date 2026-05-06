@@ -44,7 +44,38 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 String url = request.getUrl().toString();
+
+                // Handle semua deep link wallet
+                if (url.startsWith("trust:") ||
+                    url.startsWith("tpdapp:") ||
+                    url.startsWith("metamask:") ||
+                    url.startsWith("wc:") ||
+                    url.startsWith("tokenpocket:")) {
+                    try {
+                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                        startActivity(intent);
+                    } catch (Exception e) {
+                        // App tidak terinstall, buka Play Store
+                        openPlayStore(url);
+                    }
+                    return true;
+                }
+
+                // Handle link.trustwallet.com dan metamask.app.link
+                if (url.contains("link.trustwallet.com") ||
+                    url.contains("metamask.app.link") ||
+                    url.contains("tokenpocket.pro")) {
+                    try {
+                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                        startActivity(intent);
+                    } catch (Exception e) { }
+                    return true;
+                }
+
+                // Tetap di dalam app untuk indocoin.id
                 if (url.contains("indocoin.id")) return false;
+
+                // Link lain buka di browser
                 try {
                     Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                     startActivity(intent);
@@ -63,6 +94,21 @@ public class MainActivity extends AppCompatActivity {
         swipeRefresh.setOnRefreshListener(() -> webView.reload());
         swipeRefresh.setColorSchemeColors(0xFFC8922A);
         webView.loadUrl(APP_URL);
+    }
+
+    private void openPlayStore(String url) {
+        String pkg = "";
+        if (url.startsWith("trust:")) pkg = "com.wallet.crypto.trustapp";
+        else if (url.startsWith("tpdapp:") || url.startsWith("tokenpocket:")) pkg = "vip.mytokenpocket";
+        else if (url.startsWith("metamask:")) pkg = "io.metamask";
+
+        if (!pkg.isEmpty()) {
+            try {
+                Intent intent = new Intent(Intent.ACTION_VIEW,
+                    Uri.parse("market://details?id=" + pkg));
+                startActivity(intent);
+            } catch (Exception e) { }
+        }
     }
 
     @Override
